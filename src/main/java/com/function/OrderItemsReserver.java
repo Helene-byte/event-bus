@@ -2,14 +2,12 @@ package com.function;
 
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.microsoft.azure.functions.*;
-import com.microsoft.azure.functions.annotation.*;
+import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 import java.io.IOException;
-import java.util.Optional;
 import java.util.logging.Logger;
 
 
@@ -30,10 +28,13 @@ public class OrderItemsReserver {
     public void run(
             @ServiceBusQueueTrigger(name = "message",
                     queueName = "queue1",
-                    connection = "ServiceBusConnectionString") String message,
-            final ExecutionContext context) {
+                    connection = "ServiceBusConnectionString"
+            ) String message,
+            final ExecutionContext context
+           ) {
 
         Logger logger = context.getLogger();
+
         logger.info("Service Bus messages received");
 
         try {
@@ -42,7 +43,7 @@ public class OrderItemsReserver {
             logger.info("Deserialize the received message to extract order details : " + order);
             // Upload the order details as a JSON file to Blob Storage using BlobStorageService
 //            BlobStorageService blobStorageService = new BlobStorageService(blobServiceClient);
-            boolean updated = blobStorageService.updateBlobForSession(BLOB_CONTAINER_NAME, order.getId(), message, context);
+            boolean updated = blobStorageService.updateBlobForSessionWithRetry(BLOB_CONTAINER_NAME, order.getId(), message, context);
 
             logger.info("OrderItemsReserver: Order details uploaded to Blob Storage for session ID: " + order.getId()
                     + (updated ? " (Updated existing blob)" : " (Created a new blob)"));
