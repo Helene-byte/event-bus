@@ -1,0 +1,8 @@
+{
+    "azureFunctions.javaBuildTool": "maven",
+    "azureFunctions.deploySubpath": "target/azure-functions/event-bus-function-1702115034536",
+    "azureFunctions.projectLanguage": "Java",
+    "azureFunctions.projectRuntime": "~4",
+    "azureFunctions.preDeployTask": "package (functions)",
+    "azureFunctions.templateFilter": "All"
+}
