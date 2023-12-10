@@ -4,7 +4,9 @@ import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.microsoft.azure.functions.ExecutionContext;
+import com.microsoft.azure.functions.OutputBinding;
 import com.microsoft.azure.functions.annotation.FunctionName;
+import com.microsoft.azure.functions.annotation.ServiceBusQueueOutput;
 import com.microsoft.azure.functions.annotation.ServiceBusQueueTrigger;
 
 import java.io.IOException;
@@ -26,10 +28,8 @@ public class OrderItemsReserver {
 
     @FunctionName("OrderItemsReserver")
     public void run(
-            @ServiceBusQueueTrigger(name = "message",
-                    queueName = "queue1",
-                    connection = "ServiceBusConnectionString"
-            ) String message,
+            @ServiceBusQueueTrigger(name = "message", queueName = "queue1", connection = "ServiceBusConnectionString") String message,
+            @ServiceBusQueueOutput(name = "failedQueue", queueName = "failedQueue", connection = "ServiceBusConnectionString") OutputBinding<String> failedQueue,
             final ExecutionContext context
            ) {
 
@@ -42,14 +42,12 @@ public class OrderItemsReserver {
             Order order = new ObjectMapper().readValue(message, Order.class);
             logger.info("Deserialize the received message to extract order details : " + order);
             // Upload the order details as a JSON file to Blob Storage using BlobStorageService
-//            BlobStorageService blobStorageService = new BlobStorageService(blobServiceClient);
             boolean updated = blobStorageService.updateBlobForSessionWithRetry(BLOB_CONTAINER_NAME, order.getId(), message, context);
-
             logger.info("OrderItemsReserver: Order details uploaded to Blob Storage for session ID: " + order.getId()
                     + (updated ? " (Updated existing blob)" : " (Created a new blob)"));
         } catch (IOException e) {
             logger.warning("OrderItemsReserver: Error processing the message: " + e.getMessage());
-            // Implement retry logic here if needed
+            failedQueue.setValue(message);
         }
     }
 }

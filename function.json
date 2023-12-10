@@ -5,7 +5,15 @@
       "name": "message",
       "direction": "in",
       "queueName": "queue1",
-      "connection": "ServiceBusConnectionString" // Should match the App Setting name
+      "connection": "ServiceBusConnectionString"
+    },
+    {
+      "name": "failedQueue",
+      "type": "serviceBus",
+      "direction": "out",
+      "queueName": "failedQueue",
+      "connection": "ServiceBusConnectionString",
+      "dataType": "string"
     }
   ]
 }
